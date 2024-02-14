@@ -113,6 +113,7 @@ jobs:
           repository: akimd/bison
           path: bison
           fetch-depth: 2
+          submodules: true
           
       - name: compile bison
         run: |
