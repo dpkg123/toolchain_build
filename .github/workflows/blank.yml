@@ -89,6 +89,75 @@ jobs:
           make -j4 -C busybox O=out
           make install -C busybox O=out INSTALL_PATH=/home/runner/disk/busybox
 
+      - name: Checkout Git
+        uses: actions/checkout@v4
+        with:
+          repository: git/git
+          path: git
+          fetch-depth: 2
+          submodules: true
+
+      - name: compile git
+        run: |
+          cd git
+          make configure
+          ./configure --prefix=/home/runner/disk
+          make -j4
+          make install
+          cd ..
+          rm -rf git
+
+      - name: Checkout bison
+        uses: actions/checkout@v4
+        with:
+          repository: akimd/bison
+          path: bison
+          fetch-depth: 2
+          
+      - name: compile bison
+        run: |
+          cd bison
+          ./bootstrap
+          ./configure --prefix=/home/runner/disk
+          make -j4
+          make install
+          cd ..
+          rm -rf bison
+
+      - name: Checkout xz
+        uses: actions/checkout@v4
+        with:
+          repository: tukaani-project/xz
+          path: xz
+          fetch-depth: 2
+          
+      - name: compile xz
+        run: |
+          cd xz
+          bash autogen.sh
+          ./configure --prefix=/home/runner/disk
+          make -j4
+          make install
+          cd ..
+          rm -rf xz
+
+      - name: Checkout flex
+        uses: actions/checkout@v4
+        with:
+          repository: westes/flex
+          path: flex
+          fetch-depth: 2
+          
+      - name: compile flex
+        run: |
+          cd flex
+          ./autogen.sh
+          ./configure --prefix=/home/runner/disk
+          make -j4
+          make install
+          cd ..
+          rm -rf flex
+
       - name: Checkout Coreutils
         uses: actions/checkout@v4
         with:
@@ -123,37 +192,4 @@ jobs:
           cd ..
           rm -rf bash
 
-      - name: Checkout bison
-        uses: actions/checkout@v4
-        with:
-          repository: akimd/bison
-          path: coreutils
-          fetch-depth: 2
-          
-      - name: compile bison
-        run: |
-          cd bison
-          ./bootstrap
-          ./configure --prefix=/home/runner/disk
-          make -j4
-          make install
-          cd ..
-          rm -rf bison
-
-      - name: Checkout flex
-        uses: actions/checkout@v4
-        with:
-          repository: westes/flex
-          path: flex
-          fetch-depth: 2
-          
-      - name: compile flex
-        run: |
-          cd flex
-          ./autogen.sh
-          ./configure --prefix=/home/runner/disk
-          make -j4
-          make install
-          cd ..
-          rm -rf flex
       - run: bash curl -SsL https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/scripts/build_electron_toolchain.sh | bash
