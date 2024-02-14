@@ -48,11 +48,22 @@ jobs:
       - name: compile linux
         run: |
           mkdir -p /home/runner/disk
+          mkdir -p /home/runner/disk/boot
+          mkdir -p /home/runner/disk/etc
+          mkdir -p /home/runner/disk/usr
+          mkdir -p /home/runner/disk/usr/bin
+          mkdir -p /home/runner/disk/usr/lib
+          mkdir -p /home/runner/disk/var
+          mkdir -p /home/runner/disk/dev
+          mkdir -p /home/runner/disk/proc
+          mkdir -p /home/runner/disk/sys
+          ln -sf /home/runner/disk/usr/bin mkdir -p /home/runner/disk/bin
+          ln -sf /home/runner/disk/usr/lib mkdir -p /home/runner/disk/lib
           mkdir -p linux/out
           make -j4 -C linux O=out x86_64_defconfig
           make -j4 -C linux O=out 
           mkdir -p /home/runner/image/boot
-          test -d linux/out/arch/x86/boot/bzImage || cp linux/out/arch/x86/boot/bzImage /home/runner/disk/boot/bzImage
+          test -d linux/out/arch/x86/boot/bzImage || cp linux/out/arch/x86/boot/bzImage /home/runner/disk/boot/
           make -j4 -C linux O=out modules_install dtbs_install INSTALL_PATH="/home/runner/disk/boot/ INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="/home/runner/disk" INSTALL_DTBS_PATH=/home/runner/disk/boot/dtbs 
           rm -f /home/runner/disk/lib/modules/*/build /home/runner/disk/lib/modules/*/source
           rm -rf linux
