@@ -27,13 +27,16 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: CleanUP
-        run: curl -SsL https://github.com/rokibhasansagar/slimhub_actions/raw/main/cleanup.sh | bash
-
+        run: |
+            docker rmi -f $(docker images -q)
+            wget -q https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh 
+            sudo apt autopurge firefox -y
+            
       # Runs a set of commands using the runners shell
       - name: Install dep
         run: |
           sudo apt update
-          sudo apt-get install --no-install-recommends -y binutils gettext m4 automake autoconf libtool binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 aria2
+          sudo apt-get install --no-install-recommends -y binutils libncurses-dev libssl-dev libelf-dev gettext m4 automake autoconf libtool binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 aria2
 
       - name: Checkout Linux
         uses: actions/checkout@v4
