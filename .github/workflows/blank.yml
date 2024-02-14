@@ -80,7 +80,7 @@ jobs:
           wget https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/configs/coreutils_defconfig -O busybox/configs/1_defconfig
           mkdir busybox/out
           make -C busybox O=out 1_defconfig
-          make -j4
+          make -j4 -C busybox
 
       - name: Checkout Coreutils
         uses: actions/checkout@v4
