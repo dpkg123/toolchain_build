@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir -p /home/runner/disk
           mkdir -p linux/out
-          make -j4 -C linux O=out tiny.config x86_64_defconfig
+          make -j4 -C linux O=out x86_64_defconfig
           make -j4 -C linux O=out 
           mkdir -p /home/runner/image/boot
           test -d linux/out/arch/x86/boot/zImage || cp linux/out/arch/x86/boot/zImage /home/runner/disk/boot/zImage
