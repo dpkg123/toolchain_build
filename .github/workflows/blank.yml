@@ -39,13 +39,14 @@ jobs:
           sudo apt-get install --no-install-recommends -y binutils libpam0g-dev libncurses-dev libssl-dev libelf-dev gettext m4 automake autoconf libtool binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 aria2
 
       - name: Checkout Linux
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v4
         with:
           repository: torvalds/linux
           path: linux
           fetch-depth: 2
 
-      - name: compile linux
+      - name: setup linux
         run: |
           mkdir -p /home/runner/disk
           mkdir -p /home/runner/disk/boot
@@ -59,6 +60,10 @@ jobs:
           mkdir -p /home/runner/disk/sys
           ln -sf /home/runner/disk/usr/bin /home/runner/disk/bin
           ln -sf /home/runner/disk/usr/lib /home/runner/disk/lib
+
+      - name: compile linux
+        if: github.event_name == 'workflow_dispatch'
+        run: |          
           mkdir -p linux/out
           make -j4 -C linux O=out x86_64_defconfig
           make -j4 -C linux O=out 
@@ -77,10 +82,12 @@ jobs:
           
       - name: compile busybox
         run: |
-          wget https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/configs/coreutils_defconfig -O busybox/configs/1_defconfig
+          #wget https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/configs/coreutils_defconfig -O busybox/configs/1_defconfig
           mkdir busybox/out
-          make -C busybox O=out 1_defconfig
+          mkdir /home/runner/disk/busybox
+          make -C busybox O=out defconfig
           make -j4 -C busybox O=out
+          make install -C busybox O=out INSTALL_PATH=/home/runner/disk/busybox
 
       - name: Checkout Coreutils
         uses: actions/checkout@v4
