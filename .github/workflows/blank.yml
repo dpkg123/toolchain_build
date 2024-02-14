@@ -77,10 +77,10 @@ jobs:
           
       - name: compile busybox
         run: |
-          #wget https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/configs/coreutils_defconfig -O busybox/configs/1_defconfig
+          wget https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/configs/coreutils_defconfig -O busybox/configs/1_defconfig
           mkdir busybox/out
-          make -C busybox O=out defconfig
-          make -j4 -C busybox
+          make -C busybox O=out 1_defconfig
+          make -j4 -C busybox O=out
 
       - name: Checkout Coreutils
         uses: actions/checkout@v4
