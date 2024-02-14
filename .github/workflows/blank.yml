@@ -57,8 +57,8 @@ jobs:
           mkdir -p /home/runner/disk/dev
           mkdir -p /home/runner/disk/proc
           mkdir -p /home/runner/disk/sys
-          ln -sf /home/runner/disk/usr/bin mkdir -p /home/runner/disk/bin
-          ln -sf /home/runner/disk/usr/lib mkdir -p /home/runner/disk/lib
+          ln -sf /home/runner/disk/usr/bin /home/runner/disk/bin
+          ln -sf /home/runner/disk/usr/lib /home/runner/disk/lib
           mkdir -p linux/out
           make -j4 -C linux O=out x86_64_defconfig
           make -j4 -C linux O=out 
