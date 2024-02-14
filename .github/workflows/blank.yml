@@ -64,7 +64,7 @@ jobs:
           make -j4 -C linux O=out 
           mkdir -p /home/runner/image/boot
           test -d linux/out/arch/x86/boot/bzImage || cp linux/out/arch/x86/boot/bzImage /home/runner/disk/boot/
-          make -j4 -C linux O=out modules_install dtbs_install INSTALL_PATH="/home/runner/disk/boot/ INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="/home/runner/disk" INSTALL_DTBS_PATH=/home/runner/disk/boot/dtbs 
+          make -j4 -C linux O=out modules_install dtbs_install INSTALL_PATH="/home/runner/disk/boot/" INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="/home/runner/disk" INSTALL_DTBS_PATH="/home/runner/disk/boot/dtbs"
           rm -f /home/runner/disk/lib/modules/*/build /home/runner/disk/lib/modules/*/source
           rm -rf linux
 
