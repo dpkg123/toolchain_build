@@ -77,7 +77,7 @@ jobs:
           
       - name: compile busybox
         run: |
-          cp config/coreutils_config busybox/configs/1_defconfig
+          cp configs/coreutils_config busybox/configs/1_defconfig
           mkdir busybox/out
           make -C busybox O=out 1_defconfig
           make -j4
