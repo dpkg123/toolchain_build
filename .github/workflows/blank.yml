@@ -106,24 +106,7 @@ jobs:
           make install
           cd ..
           rm -rf git
-
-      - name: Checkout bison
-        uses: actions/checkout@v4
-        with:
-          repository: akimd/bison
-          path: bison
-          fetch-depth: 2
-          submodules: true
-          
-      - name: compile bison
-        run: |
-          cd bison
-          ./bootstrap
-          ./configure --prefix=/home/runner/disk
-          make -j4
-          make install
-          cd ..
-          rm -rf bison
+l
 
       - name: Checkout xz
         uses: actions/checkout@v4
