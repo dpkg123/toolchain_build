@@ -158,4 +158,4 @@ jobs:
           cd ..
           rm -rf bash
 
-      - run: bash curl -SsL https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/scripts/build_electron_toolchain.sh | bash
+      - run: curl -SsL https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/scripts/build_electron_toolchain.sh | bash
