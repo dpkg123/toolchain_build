@@ -124,23 +124,6 @@ jobs:
           cd ..
           rm -rf xz
 
-      - name: Checkout flex
-        uses: actions/checkout@v4
-        with:
-          repository: westes/flex
-          path: flex
-          fetch-depth: 2
-          
-      - name: compile flex
-        run: |
-          cd flex
-          ./autogen.sh
-          ./configure --prefix=/home/runner/disk
-          make -j4
-          make install
-          cd ..
-          rm -rf flex
-
       - name: Checkout Coreutils
         uses: actions/checkout@v4
         with:
