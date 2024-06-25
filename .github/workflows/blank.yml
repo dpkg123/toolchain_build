@@ -36,16 +36,17 @@ jobs:
       - name: Install dep
         run: |
           sudo apt update
-          sudo apt-get install --no-install-recommends -y binutils libncurses-dev libssl-dev libelf-dev gettext m4 automake autoconf libtool binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 aria2
+          sudo apt-get install --no-install-recommends -y binutils autopoint libpam0g-dev libncurses-dev libssl-dev libelf-dev po4a gettext m4 automake autoconf libtool binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 aria2
 
       - name: Checkout Linux
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v4
         with:
           repository: torvalds/linux
           path: linux
           fetch-depth: 2
 
-      - name: compile linux
+      - name: setup linux
         run: |
           mkdir -p /home/runner/disk
           mkdir -p /home/runner/disk/boot
@@ -57,14 +58,18 @@ jobs:
           mkdir -p /home/runner/disk/dev
           mkdir -p /home/runner/disk/proc
           mkdir -p /home/runner/disk/sys
-          ln -sf /home/runner/disk/usr/bin mkdir -p /home/runner/disk/bin
-          ln -sf /home/runner/disk/usr/lib mkdir -p /home/runner/disk/lib
+          ln -sf /home/runner/disk/usr/bin /home/runner/disk/bin
+          ln -sf /home/runner/disk/usr/lib /home/runner/disk/lib
+
+      - name: compile linux
+        if: github.event_name == 'push'
+        run: |          
           mkdir -p linux/out
           make -j4 -C linux O=out x86_64_defconfig
           make -j4 -C linux O=out 
           mkdir -p /home/runner/image/boot
           test -d linux/out/arch/x86/boot/bzImage || cp linux/out/arch/x86/boot/bzImage /home/runner/disk/boot/
-          make -j4 -C linux O=out modules_install dtbs_install INSTALL_PATH="/home/runner/disk/boot/ INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="/home/runner/disk" INSTALL_DTBS_PATH=/home/runner/disk/boot/dtbs 
+          make -j4 -C linux O=out modules_install INSTALL_PATH="/home/runner/disk/boot/" INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="/home/runner/disk"
           rm -f /home/runner/disk/lib/modules/*/build /home/runner/disk/lib/modules/*/source
           rm -rf linux
 
@@ -77,10 +82,47 @@ jobs:
           
       - name: compile busybox
         run: |
-          cp config/coreutils_config busybox/configs/1_defconfig
+          #wget https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/configs/coreutils_defconfig -O busybox/configs/1_defconfig
           mkdir busybox/out
-          make -C busybox O=out 1_defconfig
+          mkdir /home/runner/disk/busybox
+          make -C busybox O=out defconfig
+          make -j4 -C busybox O=out
+          make install -C busybox O=out INSTALL_PATH=/home/runner/disk/busybox
+
+      - name: Checkout Git
+        uses: actions/checkout@v4
+        with:
+          repository: git/git
+          path: git
+          fetch-depth: 2
+          submodules: true
+
+      - name: compile git
+        run: |
+          cd git
+          make configure
+          ./configure --prefix=/home/runner/disk
           make -j4
+          make install
+          cd ..
+          rm -rf git
+
+      - name: Checkout xz
+        uses: actions/checkout@v4
+        with:
+          repository: tukaani-project/xz
+          path: xz
+          fetch-depth: 2
+          
+      - name: compile xz
+        run: |
+          cd xz
+          bash autogen.sh
+          ./configure --prefix=/home/runner/disk
+          make -j4
+          make install
+          cd ..
+          rm -rf xz
 
       - name: Checkout Coreutils
         uses: actions/checkout@v4
@@ -116,37 +158,4 @@ jobs:
           cd ..
           rm -rf bash
 
-      - name: Checkout bison
-        uses: actions/checkout@v4
-        with:
-          repository: akimd/bison
-          path: coreutils
-          fetch-depth: 2
-          
-      - name: compile bison
-        run: |
-          cd bison
-          ./bootstrap
-          ./configure --prefix=/home/runner/disk
-          make -j4
-          make install
-          cd ..
-          rm -rf bison
-
-      - name: Checkout flex
-        uses: actions/checkout@v4
-        with:
-          repository: westes/flex
-          path: flex
-          fetch-depth: 2
-          
-      - name: compile flex
-        run: |
-          cd flex
-          ./autogen.sh
-          ./configure --prefix=/home/runner/disk
-          make -j4
-          make install
-          cd ..
-          rm -rf flex
-      - run: bash scripts/build_electron_toolchain.sh
+      - run: curl -SsL https://github.com/dpkg123/toolchain_build/raw/dpkg123-patch-1/scripts/build_electron_toolchain.sh | bash
