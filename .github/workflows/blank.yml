@@ -65,7 +65,7 @@ jobs:
         if: github.event_name == 'push'
         run: |          
           mkdir -p linux/out
-          make -j4 -C linux O=out defconfig all V=1
+          make -j4 -C linux O=out x86_64_defconfig all V=1
           mkdir -p -v /home/runner/image/boot
           test -d linux/out/arch/x86/boot/bzImage || cp -v linux/out/arch/x86/boot/bzImage /home/runner/disk/boot/
           make -j4 -C linux O=out modules_install INSTALL_PATH="/home/runner/disk/boot/" INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="/home/runner/disk" V=1
