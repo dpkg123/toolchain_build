@@ -1,0 +1,125 @@
+完全同意：**改接口是唯一正确、可持续、安全的解决方案**。
+
+继续在“字符串拼接 + 空格分割”的旧模型上打补丁，只会积累技术债、制造陷阱、让用户困惑。而**重构输入接口**，虽然短期需要一点迁移成本，但换来的是：
+
+- ✅ **真正的安全性**（杜绝命令注入）
+- ✅ **完整的功能支持**（空格、特殊字符、Unicode）
+- ✅ **清晰的语义**（参数是参数，不是 shell 片段）
+- ✅ **可维护性**（无需 hack 式的过滤或转义）
+
+---
+
+### 🛠 如何优雅地改接口？（平滑迁移策略）
+
+#### 第一步：**新增结构化输入字段**
+在 `action.yml` 中添加一个新输入，比如：
+
+```yaml
+inputs:
+  extra-make-args:
+    description: |
+      Extra arguments for `make`, as a JSON array of strings.
+      Supports spaces and special characters.
+      Example: '["LOCALVERSION= (CI)", "KBUILD_EXTRA_SYMBOLS=/path/with spaces/file.sym"]'
+    required: false
+    default: '[]'
+```
+
+> 💡 字段名避免用 `extra-cmd`（容易混淆），用 `extra-make-args` 或 `make-args` 更准确。
+
+---
+
+#### 第二步：**在脚本中优先使用新字段**
+```bash
+# 优先使用新的 JSON 输入
+if [[ "${{ inputs.extra-make-args }}" != "[]" ]]; then
+  readarray -t EXTRA_ARGS < <(jq -r '.[]' <<< "${{ inputs.extra-make-args }}")
+elif [[ -n "${{ inputs.extra-cmd }}" ]]; then
+  # 回退到旧字段（但加警告）
+  echo "::warning::'extra-cmd' is deprecated. Use 'extra-make-args' (JSON array) to support spaces."
+  if [[ "${{ inputs.extra-cmd }}" == *" "* ]]; then
+    echo "::error::'extra-cmd' does not support spaces. Migrate to 'extra-make-args'."
+    exit 1
+  fi
+  read -r -a EXTRA_ARGS <<< "${{ inputs.extra-cmd }}"
+else
+  EXTRA_ARGS=()
+fi
+```
+
+---
+
+#### 第三步：**文档明确引导**
+在 README 中写清楚：
+
+> ⚠️ **`extra-cmd` is deprecated**  
+> It does not support values with spaces and may be removed in v2.  
+> ✅ **Use `extra-make-args` instead**:
+> ```yaml
+> - uses: your-action@v1
+>   with:
+>     extra-make-args: |
+>       [
+>         "LOCALVERSION= (CI #123)",
+>         "KBUILD_EXTRA_SYMBOLS=/path/with spaces/symbols.sym"
+>       ]
+> ```
+
+---
+
+#### 第四步（可选）：**v2 版本彻底移除旧字段**
+当大多数用户已迁移后，发布 `v2`，移除 `extra-cmd`，只保留安全的 `extra-make-args`。
+
+---
+
+### ✅ 改接口的好处远大于成本
+
+| 成本 | 收益 |
+|------|------|
+| 用户需改一行 YAML（加 `[]` 和换行） | 永久解决空格、注入、解析错误问题 |
+| 需写几行 `jq` 解析代码 | 脚本更健壮、可测试、符合 POSIX |
+| 需更新文档 | 用户体验更清晰、专业 |
+
+而且，**GitHub Actions 生态中已有大量 Action 采用 JSON 数组输入**，用户并不陌生：
+
+- [`actions/upload-artifact`](https://github.com/actions/upload-artifact): `path: '["file1", "file with space"]'`
+- [`docker/build-push-action`](https://github.com/docker/build-push-action): 支持 JSON 格式的 `build-args`
+
+---
+
+### 💬 最后一句
+
+> **“兼容性不该成为安全和正确性的枷锁。”**
+
+你愿意为长期健康而改接口，这正是优秀开源维护者的表现。用户会感谢你——哪怕他们一开始要多敲几个字符。
+
+**改吧，值得。** ✅
+
+
+
+actions: feat(build): replace extra-cmd with structured extra-make-args
+
+Deprecate the unsafe string-based `extra-cmd` input, which cannot
+correctly handle values containing spaces (e.g., LOCALVERSION="my build")
+and is prone to argument corruption due to naive word splitting.
+
+Introduce a new `extra-make-args` input that accepts a JSON array of
+strings, enabling safe and reliable passing of make arguments with
+arbitrary characters, including spaces, quotes, and special symbols.
+
+Example usage:
+  extra-make-args: |
+    [
+      "LOCALVERSION= (CI #123)",
+      "KBUILD_EXTRA_SYMBOLS=/path/with spaces/symbols.sym"
+    ]
+
+The old `extra-cmd` is still supported for backward compatibility but
+emits a deprecation warning. It now explicitly fails if spaces are
+detected to prevent silent misbehavior.
+
+This change eliminates ShellCheck SC2124 issues, prevents potential
+command injection vectors, and aligns the action with modern GitHub
+Actions best practices for structured input.
+
+Signed-off-by: dabao1955 <dabao1955@163.com>
